@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.PermissionMapper">
+
+
+	<!-- resultMap结果集映射 type为需要映射的实体类 -->
+	<resultMap type="com.wk68.entity.Permission"
+		id="permissionAll">
+		<!-- id: -->
+		<id property="pId" column="p_id" />
+		<result property="pParent" column="p_parent" />
+		<result property="pValue" column="p_value" />
+		<result property="pModuleName" column="p_module_name" />
+		<result property="pName" column="p_name" />
+		<result property="pUpdateTime" column="p_update_time"
+			jdbcType="DATE" />
+	</resultMap>
+	<sql id="permission_all">
+		p_id,p_parent,p_value,p_module_name,p_name,p_update_time
+	</sql>
+	<!-- List<Permission> findAll(); -->
+	<!-- 显示所有 -->
+	<select id="findAll" resultMap="permissionAll">
+		select
+		<include refid="permission_all" />
+		from c_permission
+	</select>
+
+	<!-- Integer getCount(); -->
+	<!-- 获取总条数 -->
+	<select id="getCount" resultType="int">
+		select
+		count(*)
+		from c_permission
+	</select>
+
+	<!-- Integer updatePermissionByName(Permission permission); -->
+	<!-- 根据权限名称找到数据 -->
+	<select id="updatePermissionByName" resultMap="permissionAll">
+		select
+		<include refid="permission_all" />
+		from c_permission
+		<where>
+			<choose>
+				<when test="pModuleName != null and pModuleName != '' ">
+					p_module_name = #{pModuleName}
+				</when>
+				<when test="pValue != null and pValue != '' ">
+					and p_value = #{pValue}
+				</when>
+				<otherwise>
+					and 1 = 2
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	<!-- Integer updatePermission(Permission permission); -->
+	<!-- 根据id修改权限信息 -->
+	<update id="updatePermission">
+		update c_permission
+		<set>
+			<if test="pModuleName != null and pModuleName != '' ">
+				p_module_name = #{pModuleName},
+			</if>
+			<if test="pParent != null">
+				p_parent = #{pParent},
+			</if>
+			<if test="pValue != null and pValue != '' ">
+				p_value = #{pValue},
+			</if>
+			<if test="pUpdateTime != null and pUpdateTime != '' ">
+				p_update_time = #{pUpdateTime},
+			</if>
+			p_id = #{pId}
+		</set>
+		where p_id = #{pId}
+	</update>
+	<!-- Integer deleteBypid(Permission permission); -->
+	<!-- 根据id删除某个权限信息 -->
+	<delete id="deleteBypid">
+		delete from c_permission
+		where p_id = #{pId}
+	</delete>
+	<!-- Integer addPermission(Permission permission); -->
+	<!-- 添加一条权限信息 -->
+	<insert id="addPermission">
+		insert into c_permission(p_parent,p_value,p_module_name,
+		<if test="pName != null and pName != '' ">
+			p_name,
+		</if>
+		p_update_time)
+		values(#{pParent},#{pValue},#{pModuleName},
+		<if test="pName != null and pName != '' ">
+			#{pName},
+		</if>
+		#{pUpdateTime})
+	</insert>
+	<!-- List<Permission> getAllPermissionNameByUserId(String userId); -->
+	<!-- 根据用户编号查找用户所拥有的所有权限 -->
+	<select id="getAllPermissionNameByUserId"
+		resultMap="permissionAll">
+		select p.p_value as pValue,p.p_name as pName from c_permission p 
+		where p_id in 
+		(select rp.p_id from c_role_permission rp where rp.role_id in
+		(select ur.role_id from c_user_roles ur where ur.user_id = #{userId}));
+	</select>
+	
+	<!-- List<Permission> getAllPermissionName();  -->
+	<!-- 获取所有的权限值 -->
+	<select id="getAllPermissionName" resultMap="permissionAll">
+		select p_value as pValue,p_name as pName from c_permission
+	</select>
+</mapper>

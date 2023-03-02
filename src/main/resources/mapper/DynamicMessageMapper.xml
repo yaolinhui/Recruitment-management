@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.DynamicMessageMapper">
+	<!-- 获取当前用户咨询师接收的动态推送信息 -->
+	<select id="getDynamicMessagesByCounselor" resultMap="DynamicMessageResultMap">
+		select dm.*,u.user_id user_id1,u.u_name u_name from c_dynamic_message dm
+		inner join c_user u
+		on u.user_id = dm.user_id
+		where user_id2 = #{dm.userId2}
+		order by dm_create_time desc
+	</select>
+	<!-- 推送信息状态改为已读  -->
+	<update id="invertDMReadByDMId">
+		update c_dynamic_message
+		set dm_read = #{dm.dmRead}
+		where dm_id = #{dm.dmId}
+	</update>
+	<!-- dmId userId userId2 studentId  sName dmRead dmCreateTime dmMessage -->
+	<!-- dm_id user_id user_id2 student_id s_name dm_read dm_create_time dm_message -->
+	<resultMap type="com.wk68.entity.DynamicMessage" id="DynamicMessageResultMap">
+		<id property="dmId" column="dm_id"/>
+		<result property="userId" column="user_id"/>
+		<result property="userId2" column="user_id2"/>
+		<result property="studentId" column="student_id"/>
+		<result property="sName" column="s_name"/>
+		<result property="dmRead" column="dm_read"/>
+		<result property="dmCreateTime" column="dm_create_time" javaType="java.sql.Date" jdbcType="DATE"/>
+		<result property="dmMessage" column="dm_message" />
+		<collection property="user" javaType="com.wk68.entity.User"
+			ofType="com.wk68.entity.User">
+			<id property="userId" column="user_id1" />
+			<result property="uName" column="u_name" />
+		</collection>
+	</resultMap>
+	
+</mapper>

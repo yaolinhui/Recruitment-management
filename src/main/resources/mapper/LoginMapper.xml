@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.LoginMapper">
+
+	<!-- 返回结果集映射 -->
+	<resultMap type="com.wk68.entity.User" id="loginAll">
+		<id property="userId" column="user_id" />
+		<result property="uLoginName" column="u_login_name" />
+		<result property="uName" column="u_name" />
+		<result property="uPassword" column="u_password" />
+		<result property="uLockOut" column="u_lock_out" />
+		<result property="uLastLoginTime" column="u_last_login_time" />
+		<result property="uCreateTime" column="u_create_time" />
+		<result property="uPsdWrong" column="u_psd_wrong" />
+		<result property="uLockTime" column="u_lock_time" />
+		<result property="uProtectEmail" column="u_protect_email" />
+		<result property="uProtectPhone" column="u_protect_phone" />
+		<result property="uIdNumber" column="u_id_number" />
+		<result property="uGender" column="u_gender" />
+		<result property="uHeadPortrait" column="u_head_portrait" />
+		<result property="uRemark" column="u_remark" />
+		<!--2020-6-2 添加 -->
+		<result property="uStandby2" column="u_standby2" />
+	</resultMap>
+
+	<!-- 需要的字段 -->
+	<sql id="Base_Colum_List">
+		user_id,u_login_name,u_name,u_psd_wrong,
+		u_lock_out,u_id_number,u_protect_email,
+		u_protect_phone,u_psd_wrong,u_gender,u_head_portrait
+	</sql>
+	<!-- User getUserName(String loginname); -->
+	<select id="getUserName" resultMap="loginAll">
+		select
+		<include refid="Base_Colum_List" />
+		from c_user
+		where u_login_name = #{loginname}
+	</select>
+	<!-- User getUser(String loginname, String mD5PWD); -->
+	<select id="getUser" resultMap="loginAll">
+		select
+		<include refid="Base_Colum_List" />
+		from c_user
+		where u_login_name = #{loginname} and u_password =
+		#{mD5PWD}
+	</select>
+	<!-- Integer setLockTime(String loginname, String outTime); -->
+	<update id="setLockTime">
+		update c_user set u_psd_wrong = u_psd_wrong +
+		1,u_lock_time =
+		#{outTime} where u_login_name = #{loginname}
+	</update>
+	<!-- Integer Lastlogintime(String loginname, String outTime); -->
+	<update id="Lastlogintime">
+		update c_user set u_last_login_time =
+		#{outTime} where
+		u_login_name = #{loginname}
+	</update>
+	<!-- Integer setLockOut(String loginname); -->
+	<!-- 设定锁定状态 -->
+	<update id="setLockOut">
+		update c_user set u_lock_out = 1 where
+		u_login_name =
+		#{loginname}
+	</update>
+	<!-- User findPhoneNumber(String phone); -->
+	<!-- 根据用户手机号码查找每个用户 -->
+	<select id="findPhoneNumber" resultMap="loginAll">
+		select
+		<include refid="Base_Colum_List" />
+		from c_user
+		where u_protect_phone = #{phone}
+	</select>
+	<!-- Integer updatePassword(User user); -->
+	<!-- 忘记密码 -->
+	<update id="updatePassword">
+		update c_user set u_password = #{uPassword} where
+		u_protect_phone =
+		#{uProtectPhone}
+	</update>
+	<!-- User getPersonalInformation(String userId); -->
+	<!-- 根据编号查找某个用户 -->
+	<select id="getPersonalInformation" resultMap="loginAll">
+		select *
+		<!-- <include refid="Base_Colum_List" /> -->
+		from c_user
+		where user_id = #{userId}
+	</select>
+	<!-- User findEmailIsNull(String uProtectEmail); -->
+	<!-- 根据郵箱查找某个用户 -->
+	<select id="findEmailIsNull" resultMap="loginAll">
+		select
+		<include refid="Base_Colum_List" />
+		from c_user
+		where u_protect_email = #{uProtectEmail}
+	</select>
+
+	<!-- 员工用户在线或离线 -->
+	<update id="updateUStatus">
+		update c_user set
+		u_status = #{uStatus}
+		where u_login_name = #{loginname}
+	</update>
+
+
+</mapper>

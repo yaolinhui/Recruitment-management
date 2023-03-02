@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.FollowMapper">
+	<!--添加跟踪访问记录 -->
+	<!-- student_id s_name user_id f_time f_content f_next_time f_feedback f_type f_way f_status -->
+	<insert id="addFollow">
+		insert into c_follows(student_id,s_name,user_id,f_time,f_content,f_next_time,f_feedback,f_type,f_way,f_status,f_show,s_phone)
+		values(#{f.studentId},#{f.sName},#{f.userId},#{f.fTime},#{f.fContent},#{f.fNextTime},#{f.fFeedback},#{f.fType},#{f.fWay},#{f.fStatus},#{f.fShow},#{f.sPhone})
+	</insert>
+	<!--删除跟踪访问记录 -->
+	<delete id="deleteFollow">
+		delete from c_follows
+		where f_id = #{fId}
+	</delete>
+	<!-- fId 回访记录编号 studentId;跟踪学生 sName跟踪学生姓名 userId访问者id fTime 跟踪时间 fContent沟通内容
+	 fNextTime下次跟踪时间 fFeedback跟踪反馈信息 fType'老客户' 老客户、新客户、休眠客户 fWay微信、电话等 fStatus
+	 譬如：考虑中、准备报名 -->
+	 <!-- student_id s_name user_id f_time f_content f_next_time f_feedback f_type f_way f_status f_show s_phone-->
+	<!--修改跟踪访问记录 -->
+	<update id="updateFollow">
+		update c_follows
+		<set>
+			<if test="f.studentId != null and f.studentId !=''">
+				student_id = #{f.studentId},
+			</if>
+			<if test="f.sName != null and f.sName !=''">
+				s_name = #{f.sName},
+			</if>
+			<if test="f.userId != null and f.userId !=''">
+				user_id = #{f.userId},
+			</if>
+			<if test="f.fTime != null">
+				f_time = #{f.fTime},
+			</if>
+			<if test="f.fContent != null and f.fContent !=''">
+				f_content = #{f.fContent},
+			</if>
+			<if test="f.fNextTime != null">
+				f_next_time = #{f.fNextTime},
+			</if>
+			<if test="f.fFeedback != null and f.fFeedback !=''">
+				f_feedback = #{f.fFeedback},
+			</if>
+			<if test="f.fType != null and f.fType !=''">
+				f_type = #{f.fType},
+			</if>
+			<if test="f.fWay != null and f.fWay !=''">
+				f_way = #{f.fWay},
+			</if>
+			<if test="f.fStatus != null and f.fStatus !=''">
+				f_status = #{f.fStatus},
+			</if>
+			<!-- true为正常显示 false进入回收站 -->
+			<if test="f.fShow != null and f.fShow != ''">
+				f_show = #{f.fShow},
+			</if>
+			<if test="f.sPhone != null and f.sPhone !=''">
+				s_phone = #{f.sPhone},
+			</if>
+			<!--手机号作为跟踪访问对象（即学生）的唯一标识  -->
+			<!-- 为了避免所有的条件都不满足，生成的Sql语句没有set标签 -->
+			f_id = #{f.fId}
+		</set>
+		where f_id = #{f.fId} 
+	</update>
+	<!-- 通过手机号获取学生信息 -->
+	<select id="getStudentBySPhone" resultMap="com.wk68.mapper.StudentMapper.StudentResultMap">
+		select * from c_student
+		where s_phone = #{sPhone}
+	</select>
+	<!-- 获取当前用户负责学生的跟踪访问记录 -->
+	<select id="getAllFollowByUserId" resultMap="FollowResultMap">
+		select f.*,u.u_login_name u_login_name,u.u_name u_name,
+		u.u_lock_out u_lock_out,u.u_last_login_time u_last_login_time,
+		u.u_create_time u_create_time,u.u_psd_wrong u_psd_wrong,
+		u.u_lock_time
+		u_lock_time,u.u_protect_email u_protect_email,
+		u.u_protect_phone
+		u_protect_phone,u.u_id_number u_id_number,
+		u.u_head_portrait
+		u_head_portrait,u.u_gender u_gender,u.u_remark u_remark
+		from c_follows f
+		inner join c_user u
+		on f.user_id = u.user_id
+		<where>
+			1 = 1
+			<!-- sName fTime fNextTime fType fWay fStatus -->
+			<!-- 日期查询 -->
+			<if test="map.follow.fTime != null">
+				and f.f_time &gt;= #{map.follow.fTime}
+			</if>
+			<if test="map.tts.DateEndA != null">
+				and f.f_time &lt;= #{map.tts.DateEndA}
+			</if>
+			<if test="map.follow.fNextTime != null">
+				and f.f_time &gt;= #{map.follow.fNextTime}
+			</if>
+			<if test="map.tts.DateEndB != null">
+				and f.f_time &lt;= #{map.tts.DateEndB}
+			</if>
+			<if test="map.follow.user.uName != null and map.follow.user.uName != ''">
+				and u.u_name like "%"#{map.follow.user.uName}"%"
+			</if>
+			<if test="map.follow.sName != null and map.follow.sName != ''">
+				and f.s_name like "%"#{map.follow.sName}"%"
+			</if>
+			<if test="map.follow.fType != null and map.follow.fType != ''">
+				and f.f_type = #{map.follow.fType}
+			</if>
+			<if test="map.follow.fWay != null and map.follow.fWay != ''">
+				and f.f_Way = #{map.follow.fWay}
+			</if>
+			<if test="map.follow.fStatus != null and map.follow.fStatus != ''">
+				and f.f_status = #{map.follow.fStatus}
+			</if>
+			<if test="map.follow.userId != null and map.follow.userId !=''">
+				and f.user_id = #{map.follow.userId}
+			</if>
+			<if test="map.follow.fShow != null and map.follow.fShow != ''">
+				and f.f_show = #{map.follow.fShow}
+			</if>
+		</where>
+		limit #{map.page},#{map.limit}
+	</select>
+	<!-- 数据条数 -->
+	<select id="getCountFollowByUserId" resultType="int">
+		select count(*) from c_follows f
+		inner join c_user u
+		on f.user_id = u.user_id
+		<where>
+			1 = 1
+			<if test="map.follow.userId != null and map.follow.userId !=''">
+				and f.user_id = #{map.follow.userId}
+			</if>
+			<if test="map.follow.fShow != null and map.follow.fShow != ''">
+				and f.f_show = #{map.follow.fShow}
+			</if>
+		</where>
+	</select>
+	<!-- 通过验证学生姓名获取学生信息   引用第二个mapper文件的resultMap-->
+	<select id="getStudentsByVerifySName" resultMap="com.wk68.mapper.StudentMapper.StudentResultMap">
+		select * from c_student
+		where s_name = #{sName}
+	</select>
+	<!-- 跟踪访问结果映射 -->
+	<!-- fId 回访记录编号 studentId;跟踪学生 sName跟踪学生姓名 userId访问者id fTime 跟踪时间 fContent沟通内容
+	 fNextTime下次跟踪时间 fFeedback跟踪反馈信息 fType'老客户' 老客户、新客户、休眠客户 fWay微信、电话等 fStatus
+	 譬如：考虑中、准备报名 -->
+	<!-- student_id s_name user_id f_time f_content f_next_time f_feedback f_type f_way f_status -->
+	<resultMap type="com.wk68.entity.Follows" id="FollowResultMap">
+		<id column="f_id" property="fId"/>
+		<result column="student_id" property="studentId"/>
+		<result column="s_name" property="sName"/>
+		<result column="user_id" property="userId"/>
+		<result column="f_time" property="fTime" javaType="java.sql.Date" jdbcType="DATE"/>
+		<result column="f_content" property="fContent"/>
+		<result column="f_next_time" property="fNextTime" javaType="java.sql.Date" jdbcType="DATE"/>
+		<result column="f_feedback" property="fFeedback"/>
+		<result column="f_type" property="fType"/>
+		<result column="f_way" property="fWay"/>
+		<result column="f_status" property="fStatus"/>
+		<result column="f_show" property="fShow"/>
+		<result column="s_phone" property="sPhone"/>
+		<collection property="user" javaType="com.wk68.entity.User"
+			ofType="com.wk68.entity.User">
+			<id column="user_id2" property="userId" />
+			<result column="u_login_name" property="uLoginName" />
+			<result column="u_name" property="uName" />
+			<result column="u_password" property="uPassword" />
+			<result column="u_lock_out" property="uLockOut" />
+			<result column="u_last_login_time" property="uLastLoginTime"
+				javaType="java.sql.Date" jdbcType="DATE" />
+			<!--javaType jdbcType属性 处理日期格式：2020-05-13T08:11:25.000+0000 -->
+			<result column="u_create_time" property="uCreateTime"
+				javaType="java.sql.Date" jdbcType="DATE" />
+			<result column="u_psd_wrong" property="uPsdWrong" />
+			<result column="u_lock_time" property="uLockTime" />
+			<result column="u_protect_email" property="uProtectEmail" />
+			<result column="u_protect_phone" property="uProtectPhone" />
+			<result column="u_id_number" property="uIdNumber" />
+			<!-- u_head_portrait u_gender u_remark -->
+			<result column="u_head_portrait" property="uHeadPortrait" />
+			<result column="u_gender" property="uGender" />
+			<result column="u_remark" property="uRemark" />
+		</collection>
+	</resultMap>
+</mapper>

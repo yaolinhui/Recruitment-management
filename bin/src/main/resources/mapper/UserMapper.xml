@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.UserMapper">
+	<!-- Module结果映射 实体类：moduleId mName mParentId mPath mWeight -->
+	<resultMap id="ModuleResultMap" type="modules">
+		<id column="module_id" property="moduleId" />
+		<result column="m_name" property="mName" />
+		<result column="m_parent_id" property="mParentId" />
+		<result column="m_path" property="mPath" />
+		<result column="m_weight" property="mWeight" />
+	</resultMap>
+
+
+
+	<!-- 返回结果集映射 -->
+	<resultMap type="com.wk68.entity.User" id="loginAll">
+		<id property="userId" column="user_id" />
+		<result property="uLoginName" column="u_login_name" />
+		<result property="uName" column="u_name" />
+		<result property="uPassword" column="u_password" />
+		<result property="uLockOut" column="u_lock_out" />
+		<result property="uLastLoginTime" column="u_last_login_time" />
+		<result property="uCreateTime" column="u_create_time" />
+		<result property="uPsdWrong" column="u_psd_wrong" />
+		<result property="uLockTime" column="u_lock_time" />
+		<result property="uProtectEmail" column="u_protect_email" />
+		<result property="uProtectPhone" column="u_protect_phone" />
+		<result property="uIdNumber" column="u_id_number" />
+		<result property="uGender" column="u_gender" />
+		<result property="uHeadPortrait" column="u_head_portrait" />
+		<result property="uRemark" column="u_remark" />
+
+		<!--2020-6-2 添加 -->
+		<result property="uStandby2" column="u_standby2" />
+	</resultMap>
+
+	<!-- 需要的字段 -->
+	<sql id="Base_Colum_List">
+		u_id_number,u_password
+	</sql>
+	<!-- User getUserAll(String userLoginName); -->
+	<!--根据登录名查找用户信息 -->
+	<select id="getUserAll" resultMap="loginAll">
+		select
+		<include refid="Base_Colum_List" />
+		from c_user
+		where u_login_name = #{userLoginName}
+	</select>
+
+	<!-- int editPwd(String uLoginName, String newPwd); -->
+	<update id="editPwd">
+		update c_user
+		set u_password = #{newPwd} where
+		u_login_name = #{uLoginName}
+
+	</update>
+
+	<!-- 修改用户头像 -->
+	<!-- Integer setHeadPortrait(User user); -->
+	<update id="setHeadPortrait">
+		update c_user
+		set u_head_portrait = #{uHeadPortrait}
+		where user_id = #{userId}
+	</update>
+
+
+
+
+	<!-- 添加用户 -->
+	<insert id="addUser" parameterType="com.wk68.entity.User">
+		insert into
+		c_user(user_id,u_login_name,u_name,u_gender,
+		u_password,u_lock_out,u_create_time,u_psd_wrong,
+		u_protect_email,u_protect_phone,u_id_number,u_head_portrait,u_standby2)
+		values(#{u.userId},#{u.uLoginName},#{u.uName},
+		#{u.uGender},#{u.uPassword},#{u.uLockOut},
+		#{u.uCreateTime},#{u.uPsdWrong},#{u.uProtectEmail},
+		#{u.uProtectPhone},#{u.uIdNumber},#{u.uHeadPortrait},#{u.uStandby2})
+	</insert>
+	<!--锁定|解锁用户 -->
+	<update id="invertULockOut">
+		update c_user set u_lock_out = #{u.uLockOut}
+		where
+		user_id = #{u.userId}
+	</update>
+	<!-- 删除用户 -->
+	<delete id="deleteByUserId" parameterType="String">
+		delete from c_user
+		where user_id = #{userId}
+	</delete>
+	<!-- 修改用户 -->
+	<!-- 6.2新增 某些或者全部的条件为空时语句照常执行 -->
+	<update id="updateUser">
+		update c_user
+		<set>
+			<!-- <if test="u.uLoginName != null and u.uLoginName = '' ">u_login_name 
+				= #{u.uLoginName},</if> -->
+			<if test="uName != null and uName != '' ">u_name = #{uName},</if>
+			<if test="uPassword != null and uPassword != '' ">u_password = #{uPassword},</if>
+			<if test="uLockOut != null and uLockOut != '' ">u_lock_out = #{uLockOut},</if>
+			<if test="uProtectEmail != null and uProtectEmail != '' ">u_protect_email = #{uProtectEmail},</if>
+			<if test="uProtectPhone != null and uProtectPhone != '' ">u_protect_phone = #{uProtectPhone},</if>
+			<if test="uIdNumber != null and uIdNumber != '' ">u_id_number = #{uIdNumber},</if>
+			<if test="uStandby2 != null and uStandby2 != '' ">u_standby2 = #{uStandby2},</if>
+			user_id = #{userId}
+		</set>
+		where user_id = #{userId}
+	</update>
+	<!-- 重置密码 -->
+	<update id="resetPassword" parameterType="com.wk68.entity.User">
+		update c_user set
+		u_password = #{u.uPassword}
+		where user_id = #{u.userId}
+	</update>
+	<!-- 设置用户角色 添加 c_user_roles -->
+	<insert id="addUserRole">
+		insert into c_user_roles(user_id,role_id)
+		values(#{userId},#{roleId})
+	</insert>
+	<!-- 设置用户角色 移除 c_user_roles -->
+	<delete id="removeUserRole">
+		delete from c_user_roles
+		where user_id =#{userId} and
+		role_id = #{roleId}
+	</delete>
+	<!-- userId查询用户 -->
+	<select id="getByUserId" parameterType="String"
+		resultMap="UserResultMap">
+		select * from c_user
+		<where>
+			user_id = #{userId}
+		</where>
+	</select>
+	<!-- 通过用户登陆名查询用户，用于登录名、电话、邮箱、身份证号查重 -->
+	<select
+		id="getUserByULoginNameOrUProtectEmailOrUProtectPhoneOrUIdNumber"
+		parameterType="com.wk68.entity.User" resultMap="UserResultMap">
+		select * from c_user
+		<where>
+			<if test="u.uLoginName != null and u.uLoginName != ''">
+				u_login_name = #{u.uLoginName}
+			</if>
+			<if test="u.uProtectEmail != null and u.uProtectEmail != ''">
+				or u_protect_email = #{u.uProtectEmail}
+			</if>
+			<if test="u.uProtectPhone != null and u.uProtectPhone != ''">
+				or u_protect_phone = #{u.uProtectPhone}
+			</if>
+			<if test="u.uIdNumber != null and u.uIdNumber != ''">
+				or u_id_number = #{u.uIdNumber}
+			</if>
+		</where>
+	</select>
+	<!-- 获取所有User -->
+	<!--userId,uLoginName,uName,uPassword,uLockOut,uLastLoginTime,uCreateTime,uPsdWrong,uLockTime,uProtectEmail,uProtectPhone,uIdNumber -->
+	<select id="getAll" resultMap="UserResultMap"
+		parameterType="Map">
+		select u.user_id user_id,u.u_login_name u_login_name,u.u_name u_name,
+		u.u_lock_out u_lock_out,u.u_last_login_time u_last_login_time,
+		u.u_create_time u_create_time,u.u_psd_wrong u_psd_wrong,
+		u.u_lock_time
+		u_lock_time,u.u_protect_email u_protect_email,
+		u.u_protect_phone
+		u_protect_phone,u.u_id_number u_id_number,
+		u.u_head_portrait
+		u_head_portrait,u.u_gender u_gender,u.u_remark u_remark,
+		r.role_id
+		role_id,r.role_name role_name
+		from (select * from c_user u
+		<where>
+			<if
+				test="map.user.uLoginName != null and map.user.uLoginName != ''">
+				u.u_login_name like "%"#{map.user.uLoginName}"%"
+			</if>
+			<if test="map.user.uLockOut != null and map.user.uLockOut != ''">
+				and u.u_lock_out = #{map.user.uLockOut}
+			</if>
+			<if
+				test="map.user.uProtectEmail != null and map.user.uProtectEmail != ''">
+				and u.u_protect_email like "%"#{map.user.uProtectEmail}"%"
+			</if>
+			<if test="map.user.uIdNumber != null and map.user.uIdNumber != ''">
+				and u.u_id_number like "%"#{map.user.uIdNumber}"%"
+			</if>
+			<if
+				test="map.user.uProtectPhone != null and map.user.uProtectPhone != ''">
+				and u.u_protect_phone like "%"#{map.user.uProtectPhone}"%"
+			</if>
+			<!-- 数据库字段String转Date -->
+			<if test="map.uCreateTime != null and map.uCreateTime != ''">
+				and u.u_create_time &gt;= #{map.uCreateTime}
+			</if>
+			<if test="map.uCreateTimeEnd != null and map.uCreateTimeEnd != ''">
+				and u.u_create_time &lt;= #{map.uCreateTimeEnd}
+			</if>
+			<if test="map.user.uGender != null and map.user.uGender != ''">
+				and u.u_gender = #{map.user.uGender}
+			</if>
+		</where>
+		limit #{map.page},#{map.limit}) u
+		left join c_user_roles ur
+		on u.user_id
+		= ur.user_id
+		left join c_roles r on r.role_id= ur.role_id  order by u.u_create_time desc
+	</select>
+	<resultMap type="com.wk68.entity.User" id="UserResultMap">
+		<id column="user_id" property="userId" />
+		<result column="u_login_name" property="uLoginName" />
+		<result column="u_name" property="uName" />
+		<result column="u_password" property="uPassword" />
+		<result column="u_lock_out" property="uLockOut" />
+		<result column="u_last_login_time" property="uLastLoginTime" />
+		<!--javaType jdbcType属性 处理日期格式：2020-05-13T08:11:25.000+0000 -->
+		<result column="u_create_time" property="uCreateTime" />
+		<result column="u_psd_wrong" property="uPsdWrong" />
+		<result column="u_lock_time" property="uLockTime" />
+		<result column="u_protect_email" property="uProtectEmail" />
+		<result column="u_protect_phone" property="uProtectPhone" />
+		<result column="u_id_number" property="uIdNumber" />
+		<!-- u_head_portrait u_gender u_remark -->
+		<result column="u_head_portrait" property="uHeadPortrait" />
+		<result column="u_gender" property="uGender" />
+		<result column="u_remark" property="uRemark" />
+		<result column="u_status" property="uStatus" />
+		<!-- 2020-05-31 咨询师是否开启分量 -->
+		<result column="u_auto_allot" property="uAutoAllot" />
+		<!-- 代码媾和，复用性差 -->
+		<collection property="roleSet" javaType="java.util.HashSet"
+			ofType="com.wk68.entity.Roles">
+			<id property="roleId" column="role_id" />
+			<result property="roleName" column="role_name" />
+		</collection>
+	</resultMap>
+
+	<select id="getCount" resultType="int">
+		select count(DISTINCT(u.user_id))
+		from c_user u left join c_user_roles
+		ur on u.user_id = ur.user_id
+		left join c_roles r on r.role_id=
+		ur.role_id
+		<where>
+			<if
+				test="map.user.uLoginName != null and map.user.uLoginName != ''">
+				u.u_login_name like "%"#{map.user.uLoginName}"%"
+			</if>
+			<if test="map.user.uLockOut != null and map.user.uLockOut != ''">
+				and u.u_lock_out = #{map.user.uLockOut}
+			</if>
+			<if
+				test="map.user.uProtectEmail != null and map.user.uProtectEmail != ''">
+				and u.u_protect_email like "%"#{map.user.uProtectEmail}"%"
+			</if>
+			<if test="map.user.uIdNumber != null and map.user.uIdNumber != ''">
+				and u.u_id_number like "%"#{map.user.uIdNumber}"%"
+			</if>
+			<if
+				test="map.user.uProtectPhone != null and map.user.uProtectPhone != ''">
+				and u.u_protect_phone like "%"#{map.user.uProtectPhone}"%"
+			</if>
+			<!-- 数据库字段String转Date -->
+			<if test="map.uCreateTime != null and map.uCreateTime != ''">
+				and u.u_create_time &gt;= #{map.uCreateTime}
+			</if>
+			<if test="map.uCreateTimeEnd != null and map.uCreateTimeEnd != ''">
+				and u.u_create_time &lt;= #{map.uCreateTimeEnd}
+			</if>
+			<if test="map.user.uGender != null and map.user.uGender != ''">
+				and u.u_gender = #{map.user.uGender}
+			</if>
+		</where>
+	</select>
+	<!-- 通过UserId获取RoleId的集合 -->
+	<select id="getRoleIdsByUserId" resultType="int">
+		select role_id from c_user_roles
+		<where>
+			<if test="userId != null and userId != ''">
+				user_id = #{userId}
+			</if>
+		</where>
+	</select>
+	<!-- 通过RoleId获取Module集合 -->
+	<select id="getModuleByRoleId" resultMap="ModuleResultMap">
+		select m.module_id module_id,m_name,m_parent_id,m_path,m_weight from
+		c_roles_modules rm inner join c_modules m
+		on rm.module_id = m.module_id
+		<where>
+			<if test="roleId != null and roleId != ''">
+				rm.role_id = #{roleId}
+			</if>
+		</where>
+	</select>
+	<!--Integer updateUserInfo(User user); -->
+	<!--修改个人信息 -->
+	<!-- <update id="updateUserInfo"> update c_user set u_protect_email = #{uProtectEmail}, 
+		u_protect_phone = #{uProtectPhone},u_remark = #{uRemark} <set> <if test="uName 
+		!= null and uName != '' "> u_name = #{uName}, </if> <if test="uProtectEmail 
+		!= null"> u_protect_email = #{uProtectEmail}, </if> <if test="pValue != null 
+		and pValue != '' "> p_value = #{pValue}, </if> <if test="pUpdateTime != null 
+		and pUpdateTime != '' "> p_update_time = #{pUpdateTime}, </if> p_id = #{pId} 
+		</set> where p_id = #{pId} </update> -->
+	<!--Integer updateRemarkById(User user); -->
+	<!--根据用户编号修改个性签名 -->
+	<update id="updateRemarkById">
+		update c_user set u_remark = #{uRemark}
+		where user_id
+		= #{userId}
+	</update>
+	<!--开启|关闭咨询师用户自动分量 -->
+	<update id="invertUAutoAllot">
+		update c_user set u_auto_allot = #{u.uAutoAllot}
+		where user_id = #{u.userId}
+	</update>
+</mapper>

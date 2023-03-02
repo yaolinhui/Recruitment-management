@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.ModuleMapper">
+	<resultMap type="com.wk68.entity.Modules" id="getAll">
+		<id column="module_id" property="moduleId" />
+		<result column="m_parent_id" property="mParentId" />
+		<result column="m_name" property="mName" />
+		<result column="m_path" property="mPath" />
+		<result column="m_weight" property="mWeight" />
+	</resultMap>
+
+
+
+	<select id="getAll" resultMap="getAll">
+		select * from c_modules
+	</select>
+
+	<insert id="addModules">
+		insert into
+		c_modules(m_name,m_parent_id,m_path,m_weight)
+		values(#{mName},#{mParentId},#{mPath},#{mWeight})
+	</insert>
+
+	<update id="UpModules">
+		update c_modules
+		<set>
+			<if test="mName != '' and mName != null">
+				m_name = #{mName}, 
+			</if>
+			<if test="mPath != null">
+				m_path = #{mPath}, 
+			</if>
+			<if test="mWeight != '' and mWeight != null">
+				m_weight = #{mWeight}, 
+			</if>
+			<if test="mParentId != '' or mParentId == 0"> 
+				m_parent_id = #{mParentId},
+			</if>
+			module_id = #{moduleId},
+		</set>
+		where module_id = #{moduleId}
+	</update>
+
+	<delete id="delModules">
+		delete from c_modules
+		where module_id = #{moduleId}
+	</delete>
+
+	<!-- Module ModuleByNameAndPath(Modules module); -->
+	<!-- 根据模块名查找某一条数据 -->
+	<!-- 1 = 2显然为false 使这条SQL语句不能执行，避免了条件为空时执行查询所有 -->
+	<select id="ModuleByNameAndPath"
+		parameterType="com.wk68.entity.Modules" resultMap="getAll">
+		select m_name
+		from c_modules
+		<where>
+			<choose>
+				<when test="mName != null and mName != '' ">
+					m_name = #{mName}
+				</when>
+				<when test="mPath != null and mPath != '' ">
+					and m_path = #{mPath}
+				</when>
+				<otherwise>
+					and 1 = 2
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+
+
+</mapper>

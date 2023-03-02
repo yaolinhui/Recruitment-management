@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.RoleMapper">
+	<!-- 增加 c_roles -->
+	<insert id="addRole">
+		insert into c_roles(role_name)
+		values(#{r.roleName})
+	</insert>
+	<!-- 删除 role_id -->
+	<delete id="deleteRoleByRoleId">
+		delete from c_roles where role_id = #{roleId}
+	</delete>
+	<!-- 修改 -->
+	<update id="updateRole">
+		update c_roles set role_name = #{r.roleName}
+		where
+		role_id = #{r.roleId}
+	</update>
+	<!-- 设置模块 c_roles_modules 删除 -->
+	<delete id="deleteModuleByRoleId">
+		delete from c_roles_modules
+		where role_id = #{roleId}
+	</delete>
+	<!-- 设置模块 c_roles_modules 添加 -->
+	<insert id="addModuleByRoleId">
+		insert into c_roles_modules(role_id,module_id)
+		values(#{roleId},#{moduleId})
+	</insert>
+	<!-- 设置权限 c_role_permission 删除 -->
+	<delete id="deletePermissionByRoleId">
+		delete from c_role_permission
+		where role_id =
+		#{roleId}
+	</delete>
+	<!-- 设置权限 c_role_permission p_id role_id 添加 -->
+	<insert id="addPermissionByRoleId">
+		insert into c_role_permission(p_id,role_id)
+		values(#{permissionId},#{roleId})
+	</insert>
+	<!-- 通过roleId获取Role -->
+	<select id="getRoleByRoleId" resultMap="RoleResultMap">
+		select role_id,role_name
+		from c_roles
+		where role_id = #{roleId}
+	</select>
+	<!-- 通过roleName获取Role -->
+	<select id="getRoleByRoleName" resultMap="RoleResultMap">
+		select
+		role_id,role_name
+		from c_roles
+		where role_name = #{roleName}
+	</select>
+	<!--通过roleId获取moduleId c_roles_modules 已分配模块禁止删除角色 -->
+	<select id="getModuleIdsByRoleId" parameterType="int"
+		resultType="int">
+		select module_id moduleId from c_roles_modules
+		where role_id
+		= #{roleId}
+	</select>
+	<!-- 通过roleId获取permissionId c_role_permission 已分配权限禁止删除角色 -->
+	<select id="getPermissionIdsByRoleId" parameterType="int"
+		resultType="int">
+		select p_id pId from c_role_permission
+		where role_id =
+		#{roleId}
+	</select>
+	<!-- 获取所有角色 c_modules c_permission c_role_permission c_roles c_roles_modules -->
+	<select id="getAll" parameterType="Map"
+		resultMap="RoleResultMap">
+		select r.role_id role_id,r.role_name role_name,
+		p.p_id p_id,p.p_parent
+		p_parent,p.p_value p_value,
+		p.p_module_name p_module_name,p.p_name
+		p_name,p.p_update_time p_update_time,
+		m.module_id module_id,m.m_name
+		m_name,m.m_parent_id m_parent_id,m.m_path m_path,m.m_weight m_weight
+		from c_roles r
+		left join c_roles_modules rm on rm.role_id = r.role_id
+		left join c_modules m on m.module_id = rm.module_id
+		left join
+		c_role_permission rp on rp.role_id = r.role_id
+		left join c_permission p
+		on rp.p_id = p.p_id
+		<where>
+			<if test="map.role.roleName != null and map.role.roleName != ''">
+				role_name like "%"#{map.role.roleName}"%"
+			</if>
+		</where>
+		<!-- limit #{map.page},#{map.limit} -->
+	</select>
+	<!-- 角色数据总条数 -->
+	<select id="getCount" parameterType="Map" resultType="int">
+		select count(distinct(r.role_id))
+		from c_roles r
+		left join
+		c_roles_modules rm on
+		rm.role_id = r.role_id
+		left join c_modules m on
+		m.module_id =
+		rm.module_id
+		left join c_role_permission rp on rp.role_id
+		= r.role_id
+		left join c_permission p on rp.p_id = p.p_id
+		<where>
+			<if test="map.role.roleName != null and map.role.roleName != ''">
+				role_name like "%"#{map.role.roleName}"%"
+			</if>
+		</where>
+	</select>
+	<!-- 获取所有Module c_modules设置模块 module_id m_name m_parent_id m_path m_weight -->
+	<select id="getAllModule" resultMap="ModuleResultMap">
+		select
+		module_id,m_name,m_parent_id,m_path,m_weight
+		from c_modules
+	</select>
+	<!-- 获取所有Permission -->
+	<select id="getAllPermission" resultMap="PermissionResultMap">
+		select p_id,p_parent,p_value,p_module_name,p_name,p_update_time
+		from c_permission
+	</select>
+	<!--  权限结果映射-->
+	<resultMap type="com.wk68.entity.Permission" id="PermissionResultMap">
+		<id property="pId" column="p_id" />
+		<result property="pParent" column="p_parent" />
+		<result property="pValue" column="p_value" />
+		<result property="pModuleName" column="p_module_name" />
+		<result property="pName" column="p_name" />
+		<result property="pUpdateTime" column="p_update_time" jdbcType="DATE"/>
+	</resultMap>
+	<!-- 角色结果映射 -->
+	<resultMap type="com.wk68.entity.Roles" id="RoleResultMap">
+		<id column="role_id" property="roleId" />
+		<result column="role_name" property="roleName" />
+		<!-- OneToMany映射 module_id m_name m_parent_id m_path m_weight -->
+		<collection property="moduleSet"
+			javaType="java.util.HashSet" ofType="com.wk68.entity.Modules">
+			<id property="moduleId" column="module_id" />
+			<result property="mName" column="m_name" />
+			<result property="mParentId" column="m_parent_id" />
+			<result property="mPath" column="m_path" />
+			<result property="mWeight" column="m_weight" />
+		</collection>
+		<!-- OneToMany映射p_id p_parent p_value p_module_name p_name p_update_time 
+			standby2 -->
+		<!-- pId pParent pValue pModuleName pName pUpdateTime standby2 -->
+		<collection property="permissionSet"
+			javaType="java.util.HashSet" ofType="com.wk68.entity.Permission">
+			<id property="pId" column="p_id" />
+			<result property="pParent" column="p_parent" />
+			<result property="pValue" column="p_value" />
+			<result property="pModuleName" column="p_module_name" />
+			<result property="pName" column="p_name" />
+			<result property="pUpdateTime" column="p_update_time" />
+		</collection>
+	</resultMap>
+	<!-- 模块关系映射 module_id m_name m_parent_id m_path m_weight -->
+	<!-- moduleId mName mParentId mPath mWeight -->
+	<resultMap type="com.wk68.entity.Modules"
+		id="ModuleResultMap">
+		<id property="moduleId" column="module_id" />
+		<result property="mName" column="m_name" />
+		<result property="mParentId" column="m_parent_id" />
+		<result property="mPath" column="m_path" />
+		<result property="mWeight" column="m_weight" />
+	</resultMap>
+</mapper>

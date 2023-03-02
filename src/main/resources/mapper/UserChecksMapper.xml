@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.UserChecksMapper">
+	<resultMap type="com.wk68.entity.UserChecks" id="getAll">
+		<id column="uc_id" property="ucId" />
+		<result column="user_id" property="userId" />
+		<result column="u_name" property="uName" />
+		<result column="uc_check_statue" property="ucCheckStatue" />
+		<result column="uc_check_in_time" property="ucCheckInTime" />
+		<result column="uc_check_out_time" property="ucCheckOutTime" />
+		<result column="standby2" property="standby2" />
+	</resultMap>
+	
+
+
+
+	<select id="getUserChecks" resultType="userchecks">
+		select * from c_user_checks c where 1=1
+		<if test="t.checkStatue != null and t.checkStatue != ''">
+			and c.checkStatue like concat('%',#{t.checkStatue},'%')
+		</if>
+		limit #{page},#{limit}
+	</select>
+
+	<select id="getCount" parameterType="int">
+		select count(*) from c_user_checks c where 1=1
+		<if test="t.checkstatue != null and t.checkstatue != ''">
+			checkStatue = #{checkStatue}
+		</if>
+	</select>
+
+	<!-- Integer addUserChecks(UserChecks uc); -->
+	<insert id="addUserChecks"
+		parameterType="com.wk68.entity.UserChecks" useGeneratedKeys="true">
+		insert into
+		c_user_checks(uc_id,u_name,uc_check_in_time,uc_check_statue,
+		<if test="standby2 != null and standby2 != '' ">
+			standby2,
+		</if>
+		user_id)
+		values(#{ucId},#{uName},#{ucCheckInTime},#{ucCheckStatue},
+		<if test="standby2 != null and standby2 != '' ">
+			#{standby2},
+		</if>
+		#{userId})
+	</insert>
+
+	<update id="updateUserChecks"
+		parameterType="com.wk68.entity.UserChecks">
+		update c_user_checks
+		<set>
+			<if test="ucCheckOutTime != null and ucCheckOutTime != ''">
+				uc_check_out_time = #{ucCheckOutTime},
+			</if>
+			<if test="standby2 != null and standby2 != '' ">
+				standby2 = #{standby2},
+			</if>
+			<if test="ucCheckStatue != null and ucCheckStatue != ''">
+				uc_check_statue = #{ucCheckStatue}
+			</if>
+		</set>
+		where user_id = #{userId} and uc_id=#{ucId}
+	</update>
+	<select id="getTimelast" resultType="com.wk68.entity.UserChecks"
+		resultMap="getAll">
+		select * from c_user_checks where user_id = #{userId} order
+		by
+		uc_check_in_time desc
+	</select>
+
+
+	<!-- List<UserChecks> pd(String userId); -->
+	<select id="pd" resultMap="getAll">
+		select * from
+		c_user_checks c where
+		user_id = #{userId}
+		and
+		to_days(uc_check_in_time) = to_days(now())
+	</select>
+	<!-- Integer showSignOut(String userId); -->
+	<!-- 当用户意外退出页面时，用户已签到，但还未签退不显示bug -->
+	<select id="showSignOut" resultType="int">
+		select count(*) from
+		c_user_checks c where user_id = #{userId}
+		and
+		to_days(uc_check_in_time)
+		= to_days(now())
+		and uc_check_statue = "1"
+	</select>
+	<!-- Integer getCount1(FenyeUtile<UserChecks> fenye); List<UserChecks> getData(FenyeUtile<UserChecks> 
+		fenye); -->
+	<select id="getCount1" resultType="int">
+		select count(*) from c_user_checks
+		<where>
+			<if test="t.uName != null and t.uName != ''">
+				u_name like "%"#{t.uName}"%"
+			</if>
+			<if test="t.ucCheckStatue != null and t.ucCheckStatue != ''">
+				and uc_check_statue = #{t.ucCheckStatue}
+			</if>
+			<if test="t.ucCheckInTime != null">
+				and uc_check_in_time &gt;= #{t.ucCheckInTime}
+			</if>
+			<if test="t.ucCheckOutTime != null and t.ucCheckOutTime != ''">
+				and uc_check_out_time &lt;= #{t.ucCheckOutTime}
+			</if>
+		</where>
+	</select>
+
+	<select id="getData" resultMap="getAll">
+		select * from c_user_checks
+		<where>
+			<if test="t.uName != null and t.uName != ''">
+				u_name like "%"#{t.uName}"%"
+			</if>
+			<if test="t.ucCheckStatue != null and t.ucCheckStatue != ''">
+				and uc_check_statue = #{t.ucCheckStatue}
+			</if>
+			<if test="t.ucCheckInTime != null and t.ucCheckInTime != '' ">
+				and uc_check_in_time &gt;= #{t.ucCheckInTime}
+			</if>
+			<if test="t.userId != null and t.userId !='' ">
+				and uc_check_in_time &lt;= #{t.userId}
+			</if>
+			<if test="t.ucCheckOutTime != null and t.ucCheckOutTime != ''  ">
+				and uc_check_out_time &gt;= #{t.ucCheckOutTime}
+			</if>
+			<if test="t.standby2 != null and t.standby2 != '' ">
+				and uc_check_out_time &lt;= #{t.standby2}
+			</if>
+		</where>
+		limit #{page},#{limit}
+	</select>
+
+	<!-- 导出 List<UserChecks> findAllById(List<Integer> ucId); -->
+	<select id="findAllById"
+		parameterType="com.wk68.entity.UserChecks" resultMap="getAll">
+		select * from
+		c_user_checks c where c.uc_id = #{t.ucId}
+	</select>
+
+	<!-- List<UserChecks> echarts(String uName, String ucCheckInTime, String 
+		ucCheckOutTime); List<kaoqin> getCheckAll(FenyeUtile<kaoqin> fenye); -->
+	<select id="echarts" parameterType="com.wk68.entity.UserChecks"
+		resultMap="getAll">
+		select * from c_user_checks
+		<where>
+			<if test="uName != null and uName != ''">
+				and uName = #{uName}
+			</if>
+			<if test="ucCheckInTime != null and ucCheckInTime != ''">
+				and ucCheckInTime &gt;= #{ucCheckInTime}
+			</if>
+			<if test="ucCheckOutTime != null and ucCheckOutTime != ''">
+				and ucCheckOutTime &lt;= #{ucCheckOutTime}
+			</if>
+		</where>
+	</select>
+	<!-- //补签退 Integer upqiantui(UserChecks u,String userId); -->
+	<update id="upqiantui">
+		update c_user_checks
+		<set>
+			<if test="ucCheckStatue != null and ucCheckStatue != ''">
+				uc_check_statue = #{ucCheckStatue},
+			</if>
+			<if test="ucCheckOutTime != null and ucCheckOutTime != ''">
+				uc_check_out_time = #{ucCheckOutTime},
+			</if>
+		</set>
+		where uc_id = #{ucId}
+	</update>
+
+	<!-- //导出 List<UserChecks> findById(String id); List<UserChecks> findAll(); -->
+
+	<select id="findById" resultMap="getAll">
+		select * from c_user_checks
+		where uc_id = #{id}
+	</select>
+
+	<select id="findAll" resultMap="getAll">
+		select * from c_user_checks
+	</select>
+</mapper>

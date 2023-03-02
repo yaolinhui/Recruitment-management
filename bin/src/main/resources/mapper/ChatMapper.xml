@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.ChatMapper">
+	<!--List<FriendInfo> findFriendInfos(String currentUserId); -->
+	<!--显示属于群组 -->
+	<resultMap type="com.wk68.entity.FriendInfo"
+		id="ResultFriend">
+		<id column="f_id" property="id" />
+		<result column="f_group_name" property="groupname" />
+		<collection property="list" javaType="java.util.List"
+			ofType="com.wk68.entity.ChatUser">
+			<id column="user_id" property="id" />
+			<result column="u_name" property="username" />
+			<result column="u_status" property="status" />
+			<result column="u_remark" property="sign" />
+			<result column="u_head_portrait" property="avatar" />
+		</collection>
+	</resultMap>
+	<select id="findFriendInfos" resultMap="ResultFriend">
+		select * from c_friend f
+		inner join c_friend_user fu
+		on f.f_id = fu.fz_id
+		inner join c_user u
+		on
+		fu.user_id = u.user_id
+		where f.f_user_id = #{currentUserId}
+	</select>
+	<!-- EmpInfo findOne(String currentUserId); -->
+
+	<resultMap type="com.wk68.entity.ChatUser"
+		id="ResultChatUser">
+		<id column="user_id" property="id" />
+		<result column="u_name" property="username" />
+		<result column="u_lock_out" property="status" />
+		<result column="u_remark" property="sign" />
+		<result column="u_head_portrait" property="avatar" />
+	</resultMap>
+
+	<!-- GroupInfo findGroupInfo(String currentUserId); -->
+	<resultMap type="com.wk68.entity.GroupInfo" id="ResultGroup">
+		<id column="g_id" property="id" />
+		<result column="g_group_name" property="groupname" />
+		<result column="g_avatar" property="avatar" />
+	</resultMap>
+	<select id="findGroupInfo" resultMap="ResultGroup">
+		select * from c_group
+		where
+		g_user_id = #{currentUserId}
+	</select>
+	<!--List<ChatUser> getGroupMembers(Integer id); -->
+	<!--获取该用户下群组所有成员 -->
+	<select id="getGroupMembers" resultMap="ResultChatUser">
+		select * from c_user u
+		inner join c_group_user gu
+		on u.user_id = gu.gu_user_id
+		inner join
+		c_group g
+		on gu.gu_group_id = g.g_id
+		where g.g_id = #{id}
+	</select>
+	<!--Integer saveMsg(EmpInfo chatuser); -->
+	<!--向c_emp表中添加一条信息 -->
+	<insert id="saveMsg">
+		insert into
+		c_emp(e_id,e_to_id,e_user_name,e_status,e_sign,e_avatar,
+		e_is_login,e_content,e_type,e_mine,e_time_stamp,e_history_time)
+		values(#{id},#{toId},#{username},#{status},#{sign},#{avatar},
+		#{isLogin},#{content},#{type},#{mine},#{timestamp},#{historyTime})
+
+	</insert>
+	<resultMap type="com.wk68.entity.EmpInfo" id="EmpResult">
+		<id column="e_id" property="id" />
+		<result column="e_to_id" property="toId" />
+		<result column="e_user_name" property="username" />
+		<result column="e_status" property="status" />
+		<result column="e_sign" property="sign" />
+		<result column="e_avatar" property="avatar" />
+		<result column="e_is_login" property="isLogin" />
+		<result column="e_content" property="content" />
+		<result column="e_type" property="type" />
+		<result column="e_mine" property="mine" />
+		<result column="e_time_stamp" property="timestamp" />
+		<result column="e_history_time" property="historyTime" />
+		<result column="e_is_read" property="isRead" />
+
+	</resultMap>
+	<!--List<ChatUser> getUnreadMessage(String userId); -->
+	<!--获取当前聊天用户未读信息 -->
+	<select id="getUnreadMessage" resultMap="EmpResult">
+		select * from c_emp
+		where e_to_id = #{userId} and e_is_read = '0'
+	</select>
+	<!--List<EmpInfo> getAllChattingRecords(String id, String type); -->
+	<!--获取当前用户的所有聊天记录 -->
+	<select id="getAllChattingRecords" resultMap="EmpResult">
+		select * from c_emp
+		<where>
+			e_id = #{id} and e_to_id = #{userId}
+			or
+			e_id = #{userId} and
+			e_to_id = #{id}
+		</where>
+	</select>
+
+
+	<!--List<ChatUser> getAllFriend(); -->
+	<select id="getAllFriend" resultMap="ResultChatUser">
+		select * from c_user
+	</select>
+	<!--Integer AddFriend(AddFriend addFriend); -->
+	<insert id="AddFriend">
+		insert into
+		c_add_friend_group(af_user_id,
+		<if test="afMsg != null and afMsg != '' ">
+			af_msg,
+		</if>
+		<if test="afFriendOrGroup != null and afFriendOrGroup != '' ">
+			af_friend_or_group,
+		</if>
+		<if test="afGroupId != null and afGroupId != '' ">
+			af_group_id,
+		</if>
+		<if test="afCreateTime != null and afCreateTime != '' ">
+			af_create_time,
+		</if>
+		af_to_user_id)
+		values(#{afUserId},
+		<if test="afMsg != null and afMsg != '' ">
+			#{afMsg},
+		</if>
+		<if test="afFriendOrGroup != null and afFriendOrGroup != '' ">
+			#{afFriendOrGroup},
+		</if>
+		<if test="afGroupId != null and afGroupId != '' ">
+			#{afGroupId},
+		</if>
+		<if test="afCreateTime != null">
+			#{afCreateTime},
+		</if>
+		#{afToUserId})
+	</insert>
+	<!--List<AddFriend> getAddFriend(String userId);  -->
+	<!--获取添加好友  -->
+	<resultMap type="com.wk68.entity.AddFriend" id="ResultAddFriend">
+		<id column="id" property="id"/>
+		<result column="af_user_id" property="afUserId"/>
+		<result column="af_to_user_id" property="afToUserId"/>
+		<result column="af_msg" property="afMsg"/>
+		<result column="af_friend_or_group" property="afFriendOrGroup"/>
+		<result column="af_group_id" property="afGroupId"/>
+		<result column="af_is_yes" property="afIsYes"/>
+		<result column="af_create_time" property="afCreateTime"/>
+	</resultMap>
+	<select id="getAddFriend" resultMap="ResultAddFriend">
+		select *  from c_add_friend_group
+		 where af_to_user_id = #{userId} and af_is_yes = "0"
+	</select>
+
+	<!--ChatUser getAddFriendById(String userId);  -->
+	<!--获取某一个朋友  -->
+	<select id="getAddFriendById" resultMap="ResultChatUser">
+		select * from c_user where user_id = #{userId}
+	</select>
+
+	<!--List<ChatUser> getAllUserByroleId(Integer roleId);  -->
+	<!--根据角色id找到所有的用户  -->
+	<select id="getAllUserByroleId" resultMap="ResultChatUser">
+		select * from c_user u 
+		inner join c_user_roles ur 
+		on u.user_id = ur.user_id 
+		where ur.role_id = #{roleId}
+	</select>
+
+
+
+
+
+
+
+</mapper>

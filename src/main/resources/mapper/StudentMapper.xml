@@ -1,0 +1,686 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wk68.mapper.StudentMapper">
+
+
+
+	<!--Integer addStudentInfo(Student student); -->
+	<!--添加一条学生信息 -->
+	<insert id="addStudentInfo">
+		insert into
+		c_student(
+		studnet_id,s_name,user_id,
+		<if test="sPhone != null and sPhone != '' ">
+			s_phone,
+		</if>
+		s_age,s_source,
+		<if test="sGender != null and sGender != '' ">
+			s_gender,
+		</if>
+		<if test="sSourceKeyword != null and sSourceKeyword != '' ">
+			s_source_keyword,
+		</if>
+		<if test="sDegree != null and sDegree != '' ">
+			s_degree,
+		</if>
+		<if test="sStatus != null and sStatus != '' ">
+			s_status,
+		</if>
+		<if test="sWeixin != null and sWeixin != '' ">
+			s_weixin,
+		</if>
+		<if test="sSourceUrl != null and sSourceUrl != '' ">
+			s_source_url,
+		</if>
+		<if test="sStandby1 != null and sStandby1 != '' ">
+			standby1,
+		</if>
+		s_qq)
+		values(
+		#{studnetId},#{sName},#{userId},
+		<if test="sPhone != null and sPhone != '' ">
+			#{sPhone},
+		</if>
+		#{sAge},#{sSource},
+		<if test="sGender != null and sGender != '' ">
+			#{sGender},
+		</if>
+		<if test="sSourceKeyword != null and sSourceKeyword != '' ">
+			#{sSourceKeyword},
+		</if>
+		<if test="sDegree != null and sDegree != '' ">
+			#{sDegree},
+		</if>
+		<if test="sStatus != null and sStatus != '' ">
+			#{sStatus},
+		</if>
+		<if test="sWeixin != null and sWeixin != '' ">
+			#{sWeixin},
+		</if>
+		<if test="sSourceUrl != null and sSourceUrl != '' ">
+			#{sSourceUrl},
+		</if>
+		<if test="sStandby1 != null and sStandby1 != '' ">
+			#{sStandby1},
+		</if>
+		#{sQq})
+	</insert>
+	<sql id="sql_student">
+		studnet_id,
+		s_name,
+		s_phone,
+		s_qq,
+		s_weixin
+	</sql>
+	<!--List<Student> verifyUniqueField(Student student); -->
+	<!--根据参数在数据库查找对应的值 -->
+	<select id="verifyUniqueField" resultMap="StudentResultMap">
+		select
+		<include refid="sql_student" />
+		from c_student
+		<where>
+			<if test="sName != null and sName != '' ">
+				s_name = #{sName}
+			</if>
+			<if test="sPhone != null and sPhone != '' ">
+				and s_phone = #{sPhone}
+			</if>
+			<if test="sQq != null and sQq != '' ">
+				and s_qq = #{sQq}
+			</if>
+			<if test="sWeixin != null and sWeixin != '' ">
+				and s_weixin = #{sWeixin}
+			</if>
+		</where>
+	</select>
+	<sql id="sql_getAllByUserId">
+		s.*,u.user_id user_id1,u.u_login_name u_login_name,u.u_name
+		u_name,
+		u.u_lock_out u_lock_out,u.u_last_login_time u_last_login_time,
+		u.u_create_time u_create_time,u.u_psd_wrong u_psd_wrong,
+		u.u_lock_time
+		u_lock_time,u.u_protect_email u_protect_email,
+		u.u_protect_phone
+		u_protect_phone,u.u_id_number u_id_number,
+		u.u_head_portrait
+		u_head_portrait,u.u_gender u_gender,u.u_remark u_remark,
+		<!--查询咨询师 -->
+		u2.user_id user_id22,u2.u_login_name u_login_name2,u2.u_name u_name2,
+		u2.u_lock_out u_lock_out2,u2.u_last_login_time u_last_login_time2,
+		u2.u_create_time u_create_time2,u2.u_psd_wrong u_psd_wrong2,
+		u2.u_lock_time u_lock_time2,u2.u_protect_email u_protect_email2,
+		u2.u_protect_phone u_protect_phone2,u2.u_id_number u_id_number2,
+		u2.u_head_portrait u_head_portrait2,u2.u_gender u_gender2,u2.u_remark
+		u_remark2
+
+	</sql>
+
+
+	<select id="getRolesByUserId" resultMap="RoleResultMap">
+		select r.role_id role_id,r.role_name role_name from c_roles r
+		inner
+		join c_user_roles ur on r.role_id = ur.role_id
+		<where>
+			ur.user_id = #{userId}
+		</where>
+	</select>
+	<!--studnet_id user_id s_name s_age s_gender s_phone s_perstate s_address 
+		s_source s_source_url s_source_keyword s_degree s_qq s_weixin s_status s_counselor_remark 
+		s_score s_curriculum s_is_valia s_invalid_cause s_is_callback s_callback_time 
+		s_is_visit s_visit_time s_handsel s_handsel_time s_is_pay s_pay_time s_pay_handsel 
+		s_is_return_premium s_return_premium_case s_is_return_premium_time s_is_in_class 
+		s_in_class_time s_create_time -->
+	<!-- studnetId userId sName sAge sGender sPhone sPerstate sAddress sSource 
+		sSourceUrl sSourceKeyword sDegree sQq sWeixin sStatus sCounselorRemark sScore 
+		sCurriculum sIsValia sInvalidCause sIsCallback sCallbackTime sIsVisit sVisitTime 
+		sHandsel sHandselTime sIsPay sPayTime sPayHandsel sIsReturnPremium sReturnPremiumCase 
+		sIsReturnPremiumTime sIsInClass sInClassTime sCreateTime -->
+	<!-- 学生关系映射 -->
+	<resultMap type="com.wk68.entity.Student"
+		id="StudentResultMap">
+		<id column="studnet_id" property="studnetId" />
+		<!-- 咨询师员工编号 -->
+		<result column="user_id2" property="userId2" />
+		<!-- 是否已分配咨询师 -->
+		<result column="s_allot" property="sAllot" />
+		<result column="user_id" property="userId" />
+		<result column="s_name" property="sName" />
+		<result column="s_age" property="sAge" />
+		<result column="s_gender" property="sGender" />
+		<result column="s_phone" property="sPhone" />
+		<result column="s_perstate" property="sPerstate" />
+		<result column="s_address" property="sAddress" />
+		<result column="s_source" property="sSource" />
+		<result column="s_source_url" property="sSourceUrl" />
+		<result column="s_source_keyword" property="sSourceKeyword" />
+		<result column="s_degree" property="sDegree" />
+		<result column="s_qq" property="sQq" />
+		<result column="s_weixin" property="sWeixin" />
+		<result column="s_status" property="sStatus" />
+		<result column="s_counselor_remark" property="sCounselorRemark" />
+		<result column="s_score" property="sScore" />
+		<result column="s_curriculum" property="sCurriculum" />
+		<result column="s_is_valia" property="sIsValia" />
+		<result column="s_invalid_cause" property="sInvalidCause" />
+		<result column="s_is_callback" property="sIsCallback" />
+		<result column="s_callback_time" property="sCallbackTime"
+			javaType="java.sql.Date" jdbcType="DATE" />
+		<result column="s_is_visit" property="sIsVisit" />
+		<result column="s_visit_time" property="sVisitTime"
+			javaType="java.sql.Date" jdbcType="DATE" />
+		<result column="s_handsel" property="sHandsel" />
+		<result column="s_handsel_time" property="sHandselTime" />
+		<result column="s_is_pay" property="sIsPay" />
+		<result column="s_pay_time" property="sPayTime"
+			javaType="java.sql.Date" jdbcType="DATE" />
+		<result column="s_pay_handsel" property="sPayHandsel" />
+		<result column="standby1" property="sStandby1" />
+		<result column="s_is_return_premium"
+			property="sIsReturnPremium" />
+		<result column="s_return_premium_case"
+			property="sReturnPremiumCase" />
+		<result column="s_is_return_premium_time"
+			property="sIsReturnPremiumTime" javaType="java.sql.Date"
+			jdbcType="DATE" />
+		<result column="s_is_in_class" property="sIsInClass" />
+		<result column="s_in_class_time" property="sInClassTime"
+			javaType="java.sql.Date" jdbcType="DATE" />
+		<result column="s_create_time" property="sCreateTime"
+			javaType="java.sql.Date" jdbcType="DATE" />
+		<collection property="user" javaType="com.wk68.entity.User"
+			ofType="com.wk68.entity.User">
+			<id column="user_id2" property="userId" />
+			<result column="u_login_name" property="uLoginName" />
+			<result column="u_name" property="uName" />
+			<result column="u_password" property="uPassword" />
+			<result column="u_lock_out" property="uLockOut" />
+			<result column="u_last_login_time" property="uLastLoginTime"
+				javaType="java.sql.Date" jdbcType="DATE" />
+			<!--javaType jdbcType属性 处理日期格式：2020-05-13T08:11:25.000+0000 -->
+			<result column="u_create_time" property="uCreateTime"
+				javaType="java.sql.Date" jdbcType="DATE" />
+			<result column="u_psd_wrong" property="uPsdWrong" />
+			<result column="u_lock_time" property="uLockTime" />
+			<result column="u_protect_email" property="uProtectEmail" />
+			<result column="u_protect_phone" property="uProtectPhone" />
+			<result column="u_id_number" property="uIdNumber" />
+			<!-- u_head_portrait u_gender u_remark -->
+			<result column="u_head_portrait" property="uHeadPortrait" />
+			<result column="u_gender" property="uGender" />
+			<result column="u_remark" property="uRemark" />
+		</collection>
+		<!-- 咨询师 -->
+		<collection property="user2"
+			javaType="com.wk68.entity.User" ofType="com.wk68.entity.User">
+			<id column="user_id22" property="userId" />
+			<result column="u_login_name2" property="uLoginName" />
+			<result column="u_name2" property="uName" />
+			<result column="u_password2" property="uPassword" />
+			<result column="u_lock_out2" property="uLockOut" />
+			<result column="u_last_login_time2" property="uLastLoginTime"
+				javaType="java.sql.Date" jdbcType="DATE" />
+			<!--javaType jdbcType属性 处理日期格式：2020-05-13T08:11:25.000+0000 -->
+			<result column="u_create_time2" property="uCreateTime"
+				javaType="java.sql.Date" jdbcType="DATE" />
+			<result column="u_psd_wrong2" property="uPsdWrong" />
+			<result column="u_lock_time2" property="uLockTime" />
+			<result column="u_protect_email2" property="uProtectEmail" />
+			<result column="u_protect_phone2" property="uProtectPhone" />
+			<result column="u_id_numbe2r" property="uIdNumber" />
+			<!-- u_head_portrait u_gender u_remark -->
+			<result column="u_head_portrait2" property="uHeadPortrait" />
+			<result column="u_gender2" property="uGender" />
+			<result column="u_remark2" property="uRemark" />
+		</collection>
+
+	</resultMap>
+	<!--角色关系映射 -->
+	<resultMap type="com.wk68.entity.Roles" id="RoleResultMap">
+		<id property="roleId" column="role_id" />
+		<result property="roleName" column="role_name" />
+	</resultMap>
+
+	<!--Integer updateStudent(UpdateStudent student); -->
+	<!--修改一条学生信息 -->
+	<update id="updateStudent">
+		update c_student
+		<set>
+			<if test="sname != null and sname != '' ">
+				s_name = #{sname},
+			</if>
+			<if test="sage != null and sage != '' ">
+				s_age = #{sage},
+			</if>
+			<if test="sgender != null and sgender != '' ">
+				s_gender = #{sgender},
+			</if>
+			<if test="sphone != null and sphone != '' ">
+				s_phone = #{sphone},
+			</if>
+			<if test="sperstate != null and sperstate != '' ">
+				s_perstate = #{sperstate},
+			</if>
+			<if test="saddress != null and saddress != '' ">
+				s_address = #{saddress},
+			</if>
+			<if test="ssource != null and ssource != '' ">
+				s_source = #{ssource},
+			</if>
+			<if test="ssourceUrl != null and ssourceUrl != '' ">
+				s_source_url = #{ssourceUrl},
+			</if>
+			<if test="ssourceKeyword != null and ssourceKeyword != '' ">
+				s_source_keyword = #{ssourceKeyword},
+			</if>
+			<if test="sdegree != null and sdegree != '' ">
+				s_degree = #{sdegree},
+			</if>
+			<if test="sqq != null and sqq != '' ">
+				s_qq = #{sqq},
+			</if>
+			<if test="sweixin != null and sweixin != '' ">
+				s_weixin = #{sweixin},
+			</if>
+			<if test="sstatus != null and sstatus != '' ">
+				s_status = #{sstatus},
+			</if>
+			<if test="scounselorRemark != null and scounselorRemark != '' ">
+				s_counselor_remark = #{scounselorRemark},
+			</if>
+			<if test="sscore != null and sscore != '' ">
+				s_score = #{sscore},
+			</if>
+			<if test="scurriculum != null and scurriculum != '' ">
+				s_curriculum = #{scurriculum},
+			</if>
+			<if test="sisValia != null and sisValia != '' ">
+				s_is_valia = #{sisValia},
+			</if>
+			<if test="sinvalidCause != null and sinvalidCause != '' ">
+				s_invalid_cause = #{sinvalidCause},
+			</if>
+			<if test="sisCallback != null and sisCallback != '' ">
+				s_is_callback = #{sisCallback},
+			</if>
+			<if test="sstandby1 != null and sstandby1 != '' ">
+				standby1 = #{sstandby1},
+			</if>
+			<if test="scallbackTime != null and scallbackTime != '' ">
+				s_callback_time = #{scallbackTime},
+			</if>
+			<if test="sisVisit != null and sisVisit != '' ">
+				s_is_visit = #{sisVisit},
+			</if>
+			<if test="svisitTime != null and svisitTime != '' ">
+				s_visit_time = #{svisitTime},
+			</if>
+			<if test="shandsel != null and shandsel != '' ">
+				s_handsel = #{shandsel},
+			</if>
+			<if test="shandselTime != null and shandselTime != '' ">
+				s_handsel_time = #{shandselTime},
+			</if>
+			<if test="sisPay != null and sisPay != '' ">
+				s_is_pay = #{sisPay},
+			</if>
+			<if test="spayTime != null and spayTime != '' ">
+				s_pay_time = #{spayTime},
+			</if>
+			<if test="spayHandsel != null and spayHandsel != '' ">
+				s_pay_handsel = #{spayHandsel},
+			</if>
+			<if test="sisReturnPremium != null and sisReturnPremium != '' ">
+				s_is_return_premium = #{sisReturnPremium},
+			</if>
+			<if
+				test="sreturnPremiumCase != null and sreturnPremiumCase != '' ">
+				s_return_premium_case = #{sreturnPremiumCase},
+			</if>
+			<if
+				test="sisReturnPremiumTime != null and sisReturnPremiumTime != '' ">
+				s_is_return_premium_time = #{sisReturnPremiumTime},
+			</if>
+			<if test="sisInClass != null and sisInClass != '' ">
+				s_is_in_class = #{sisInClass},
+			</if>
+			<if test="sinClassTime != null and sinClassTime != '' ">
+				s_in_class_time = #{sinClassTime},
+			</if>
+			<if test="screateTime != null and screateTime != '' ">
+				s_create_time = #{screateTime},
+			</if>
+			studnet_id = #{studnetId}
+		</set>
+		where studnet_id = #{studnetId}
+	</update>
+
+	<!--Integer deleteStudent(Student student); -->
+	<!--永久删除一条学生信息 -->
+	<delete id="deleteStudent">
+		delete from c_student where studnet_id = #{studnetId}
+	</delete>
+
+
+	<!--Integer batchDelectStudent(String studentId); -->
+	<!--根据学生编号把某一条学生所有信息copy到另一张表中 -->
+	<insert id="batchDelectStudent">
+		insert into c_student_copy select * from c_student
+		where studnet_id = #{studnetId}
+	</insert>
+
+	<!--List<Student> getAllByUserIdRecyleBin(Map<String, Object> map); -->
+	<!--多条件查询c_student_copy表中的所有数据 -->
+	<select id="getAllByUserIdRecyleBin"
+		resultMap="StudentResultMap">
+		select s.*,u.user_id user_id2,u.u_login_name u_login_name,u.u_name
+		u_name,
+		u.u_lock_out u_lock_out,u.u_last_login_time u_last_login_time,
+		u.u_create_time u_create_time,u.u_psd_wrong u_psd_wrong,
+		u.u_lock_time
+		u_lock_time,u.u_protect_email u_protect_email,
+		u.u_protect_phone
+		u_protect_phone,u.u_id_number u_id_number,
+		u.u_head_portrait
+		u_head_portrait,u.u_gender u_gender,u.u_remark u_remark from
+		c_student_copy
+		s inner join c_user u
+		<where>
+			<if
+				test="map.student.sIsValia != null and map.student.sIsValia != '' ">
+				s_is_valia = #{map.student.sIsValia}
+			</if>
+			<if test="map.student.sName != null and map.student.sName != '' ">
+				and s_name like "%"#{map.student.sName}"%"
+			</if>
+			<if
+				test="map.student.sPhone != null and map.student.sPhone != '' ">
+				and s_phone = #{map.student.sPhone}
+			</if>
+			<if test="map.user.uName != null and map.user.uName != '' ">
+				and u.u_name like "%"#{map.user.uName}"%"
+			</if>
+		</where>
+	</select>
+
+
+
+
+
+
+	<!--Integer getCountByUserIdRecyleBin(Map<String, Object> map); -->
+	<!--回收站中查询表中数据总条数 -->
+	<select id="getCountByUserIdRecyleBin" resultType="int">
+		select count(*) from c_student_copy s inner join c_user u <!-- on s.user_id 
+			= u.user_id -->
+		<where>
+			<if
+				test="map.student.sIsValia != null and map.student.sIsValia != '' ">
+				s_is_valia = #{map.student.sIsValia}
+			</if>
+			<if test="map.student.sName != null and map.student.sName != '' ">
+				and s_name like "%"#{map.student.sName}"%"
+			</if>
+			<if
+				test="map.student.sPhone != null and map.student.sPhone != '' ">
+				and s_phone = #{map.student.sPhone}
+			</if>
+			<if test="map.user.uName != null and map.user.uName != '' ">
+				and u.u_name like "%"#{map.user.uName}"%"
+			</if>
+		</where>
+	</select>
+
+	<!--Integer deleteStudentRecycleBin(String studentId); -->
+	<!--删除一条回收站c_student_copy表中的数据 -->
+	<delete id="deleteStudentRecycleBin">
+		delete from c_student_copy where studnet_id =
+		#{studnetId}
+	</delete>
+
+
+	<!--Integer huanyuanStudentRecycleBin(String studentId); -->
+	<!--从回收站表c_student_copy复制到c_student中 -->
+	<insert id="huanyuanStudentRecycleBin">
+		insert into c_student select * from c_student_copy
+		where studnet_id = #{studnetId}
+	</insert>
+
+	<!-- 根据userId获取User -->
+	<select id="getUserByUserId" resultMap="StudentResultMap">
+		select * from s_student
+		where user_id = #{userId}
+	</select>
+	<!-- 动态推送信息 -->
+	<insert id="pushMessage">
+		insert into
+		c_dynamic_message(user_id,user_id2,student_id,s_name,dm_read,dm_create_time,dm_message)
+		values(#{dm.userId},#{dm.userId2},#{dm.studentId},#{dm.sName},#{dm.dmRead},#{dm.dmCreateTime},#{dm.dmMessage})
+	</insert>
+	<!-- 获取所有咨询师用户 -->
+	<select id="getAllCounselorUser"
+		resultMap="com.wk68.mapper.UserMapper.UserResultMap">
+		select u.* from c_user u
+		left join c_user_roles ur on
+		u.user_id =
+		ur.user_id
+		left join c_roles r on ur.role_id = r.role_id
+		<where>
+			<if test="roleName != null and roleName != ''">
+				r.role_name = #{roleName}
+			</if>
+		</where>
+	</select>
+	<!-- 分配咨询师 -->
+	<update id="allotCounselor"
+		parameterType="com.wk68.entity.Student">
+		update c_student set
+		<if test="s.userId2 != null and s.userId2 != ''">
+			user_id2 = #{s.userId2},
+		</if>
+		<if test="s.sAllot != null and s.sAllot != ''">
+			s_allot = #{s.sAllot}
+		</if>
+		where studnet_id = #{s.studnetId}
+	</update>
+
+
+	<select id="getAllByUserId" resultMap="StudentResultMap">
+		select
+		<include refid="sql_getAllByUserId" />
+		from c_student s
+		inner join c_user u on s.user_id = u.user_id
+		inner join
+		c_student s2 on s2.studnet_id = s.studnet_id
+		left join c_user u2 on
+		s2.user_id2 = u2.user_id
+		<where>
+			<if
+				test="map.student.sIsValia != null and map.student.sIsValia != '' ">
+				s.s_is_valia = #{map.student.sIsValia}
+			</if>
+			<if
+				test="map.student.sIsCallback != null and map.student.sIsCallback != '' ">
+				and s.s_is_callback = #{map.student.sIsCallback}
+			</if>
+			<if test="map.student.sQq != null and map.student.sQq != '' ">
+				and s.s_qq like "%"#{map.student.sQq}"%"
+			</if>
+			<if test="map.student.sName != null and map.student.sName != '' ">
+				and s.s_name like "%"#{map.student.sName}"%"
+			</if>
+			<if
+				test="map.student.sPhone != null and map.student.sPhone != '' ">
+				and s.s_phone = #{map.student.sPhone}
+			</if>
+			<if test="map.user.uName != null and map.user.uName != '' ">
+				and u.u_name like "%"#{map.user.uName}"%"
+			</if>
+			<if
+				test="map.student.sIsPay != null and map.student.sIsPay != '' ">
+				and s.s_is_pay like #{map.student.sIsPay}
+			</if>
+			<if test="map.student.sCreateTime != null">
+				and s.s_create_time &gt;= #{map.student.sCreateTime}
+			</if>
+			<if test="map.dfs.DateEndA != null">
+				and s.s_create_time &lt;= #{map.dfs.DateEndA}
+			</if>
+			<if test="map.student.sVisitTime != null">
+				and s.s_visit_time &gt;= #{map.student.sVisitTime}
+			</if>
+			<if test="map.dfs.DateEndB != null">
+				and s.s_visit_time &lt;= #{map.dfs.DateEndB}
+			</if>
+			<if test="map.student.sCallbackTime != null">
+				and s.s_callback_time &gt;= #{map.student.sCallbackTime}
+			</if>
+			<if test="map.dfs.DateEndC != null">
+				and s.s_callback_time &lt;= #{map.dfs.DateEndC}
+			</if>
+			<if test="map.student.sPayTime != null">
+				and s.s_pay_time &gt;= #{map.student.sPayTime}
+			</if>
+			<if test="map.dfs.DateEndD != null">
+				and s.s_pay_time &lt;= #{map.dfs.DateEndD}
+			</if>
+			<if test="map.student.sInClassTime != null">
+				and s.s_in_class_time &gt;= #{map.student.sInClassTime}
+			</if>
+			<if test="map.dfs.DateEndE != null">
+				and s.s_in_class_time &lt;= #{map.dfs.DateEndE}
+			</if>
+			<!--网络咨询师|咨询师经理 网络学生管理 -->
+			<if test="map.student.userId != null and map.student.userId != ''">
+				and s.user_id = #{map.student.userId}
+			</if>
+			<!-- 咨询师|咨询师经理 我的学生管理 -->
+			<if
+				test="map.student.userId2 != null and map.student.userId2 != ''">
+				and s.user_id2 = #{map.student.userId2}
+			</if>
+			<!--map.user.userId为null，说明为我的学生管理数据 map.student.userId2为null，说明为咨询师经理的我的学生管理模块（查询所有已分配咨询师的学生） -->
+			<if test="map.user.userId == null and map.student.userId2 == null">
+				and s.user_id2 is not null and LENGTH(s.user_id2) > 0
+			</if>
+			<!-- 学生是否分配咨询师 -->
+			<if test="map.student.sAllot != null and map.student.sAllot != ''">
+				and s.s_allot = #{map.student.sAllot}
+			</if>
+		</where>
+		order by s.s_create_time
+		limit #{map.page},#{map.limit}
+	</select>
+
+	<select id="getCountByUserId" resultType="int">
+		select count(s.s_name) from c_student s inner join c_user u on
+		s.user_id = u.user_id
+		<where>
+			<if
+				test="map.student.sIsValia != null and map.student.sIsValia != '' ">
+				s.s_is_valia = #{map.student.sIsValia}
+			</if>
+			<if
+				test="map.student.sIsCallback != null and map.student.sIsCallback != '' ">
+				and s.s_is_callback = #{map.student.sIsCallback}
+			</if>
+			<if test="map.student.sQq != null and map.student.sQq != '' ">
+				and s.s_qq like "%"#{map.student.sQq}"%"
+			</if>
+			<if test="map.student.sName != null and map.student.sName != '' ">
+				and s.s_name like "%"#{map.student.sName}"%"
+			</if>
+			<if
+				test="map.student.sPhone != null and map.student.sPhone != '' ">
+				and s.s_phone = #{map.student.sPhone}
+			</if>
+			<if test="map.user.uName != null and map.user.uName != '' ">
+				and u.u_name like "%"#{map.user.uName}"%"
+			</if>
+			<if
+				test="map.student.sIsPay != null and map.student.sIsPay != '' ">
+				and s.s_is_pay like #{map.student.sIsPay}
+			</if>
+			<if test="map.student.sCreateTime != null">
+				and s.s_create_time &gt;= #{map.student.sCreateTime}
+			</if>
+			<if test="map.dfs.DateEndA != null">
+				and s.s_create_time &lt;= #{map.dfs.DateEndA}
+			</if>
+			<if test="map.student.sVisitTime != null">
+				and s.s_visit_time &gt;= #{map.student.sVisitTime}
+			</if>
+			<if test="map.dfs.DateEndB != null">
+				and s.s_visit_time &lt;= #{map.dfs.DateEndB}
+			</if>
+			<if test="map.student.sCallbackTime != null">
+				and s.s_callback_time &gt;= #{map.student.sCallbackTime}
+			</if>
+			<if test="map.dfs.DateEndC != null">
+				and s.s_callback_time &lt;= #{map.dfs.DateEndC}
+			</if>
+			<if test="map.student.sPayTime != null">
+				and s.s_pay_time &gt;= #{map.student.sPayTime}
+			</if>
+			<if test="map.dfs.DateEndD != null">
+				and s.s_pay_time &lt;= #{map.dfs.DateEndD}
+			</if>
+			<if test="map.student.sInClassTime != null">
+				and s.s_in_class_time &gt;= #{map.student.sInClassTime}
+			</if>
+			<if test="map.dfs.DateEndE != null">
+				and s.s_in_class_time &lt;= #{map.dfs.DateEndE}
+			</if>
+			<!--网络咨询师|咨询师经理 网络学生管理 -->
+			<if test="map.student.userId != null and map.student.userId != ''">
+				and s.user_id = #{map.student.userId}
+			</if>
+			<!-- 咨询师|咨询师经理 我的学生管理 -->
+			<if
+				test="map.student.userId2 != null and map.student.userId2 != ''">
+				and s.user_id2 = #{map.student.userId2}
+			</if>
+			<!--map.user.userId为null，说明为我的学生管理数据 map.student.userId2为null，说明为咨询师经理的我的学生管理模块（查询所有已分配咨询师的学生） -->
+			<if test="map.user.userId == null and map.student.userId2 == null">
+				and s.user_id2 is not null and LENGTH(s.user_id2) > 0
+			</if>
+			<!-- 学生是否分配咨询师 -->
+			<if test="map.student.sAllot != null and map.student.sAllot != ''">
+				and s.s_allot = #{map.student.sAllot}
+			</if>
+		</where>
+	</select>
+	<!--List<Student> getFollowAllStudentByUserId(User user); -->
+	<!--根据咨询师角色下用户编号找到自己负责的所有学生 -->
+	<select id="getFollowAllStudentByUserId"
+		resultMap="StudentResultMap">
+		select * from c_student
+		<where>
+			<if test="studentName != null and studentName != '' ">
+				s_name like "%"#{studentName}"%" and
+			</if>
+			user_id2 = #{userId}
+		</where>
+		limit #{page},#{limit}
+	</select>
+
+	<!--Integer getCountFollowAllStudentByUserId(String userId); -->
+	<!-- 根据咨询师角色下用户编号找到自己负责的所有学生 获取数据总条数 -->
+	<select id="getCountFollowAllStudentByUserId" resultType="int">
+		select count(*) from c_student
+		<where>
+			<if test="studentName != null and studentName != '' ">
+				s_name like "%"#{studentName}"%" and
+			</if>
+			user_id2 = #{userId}
+		</where>
+	</select>
+
+	<select id="findById" resultMap="StudentResultMap">
+		select * from c_student
+		where studnet_id = #{id}
+	</select>
+
+	<select id="findAll" resultMap="StudentResultMap">
+		select * from c_student
+	</select>
+</mapper>
